@@ -1,0 +1,6 @@
+= terminal-view
+
+Simple TUI library:
+
+. Based on tcell
+. Structed maybe like cobra
