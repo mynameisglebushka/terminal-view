@@ -10,9 +10,9 @@ import (
 
 type Menu struct {
 	Title        string
-	FirstItem    *MenuItem
-	LastItem     *MenuItem
-	SelectedItem *MenuItem
+	firstItem    *MenuItem
+	lastItem     *MenuItem
+	selectedItem *MenuItem
 }
 
 func NewMenu(title string) *Menu {
@@ -22,17 +22,17 @@ func NewMenu(title string) *Menu {
 }
 
 func (m *Menu) AddItem(item *MenuItem) *Menu {
-	if m.FirstItem != nil {
-		item.Parent = m.LastItem
-		item.Child = m.FirstItem
-		m.LastItem.Child = item
-		m.FirstItem.Parent = item
-		m.LastItem = item
+	if m.firstItem != nil {
+		item.parent = m.lastItem
+		item.child = m.firstItem
+		m.lastItem.child = item
+		m.firstItem.parent = item
+		m.lastItem = item
 	} else {
-		m.FirstItem = item
-		m.LastItem = item
-		m.SelectedItem = item
-		m.FirstItem.IsSelected = true
+		m.firstItem = item
+		m.lastItem = item
+		m.selectedItem = item
+		m.firstItem.isSelected = true
 	}
 	return m
 }
@@ -42,10 +42,10 @@ func (m *Menu) KeyUp() {
 }
 
 func (m *Menu) selectParent() {
-	if m.SelectedItem.Parent != nil {
-		m.SelectedItem.Parent.IsSelected = true
-		m.SelectedItem.IsSelected = false
-		m.SelectedItem = m.SelectedItem.Parent
+	if m.selectedItem.parent != nil {
+		m.selectedItem.parent.isSelected = true
+		m.selectedItem.isSelected = false
+		m.selectedItem = m.selectedItem.parent
 	}
 }
 
@@ -54,17 +54,17 @@ func (m *Menu) KeyDown() {
 }
 
 func (m *Menu) selectChild() {
-	if m.SelectedItem.Child != nil {
-		m.SelectedItem.Child.IsSelected = true
-		m.SelectedItem.IsSelected = false
-		m.SelectedItem = m.SelectedItem.Child
+	if m.selectedItem.child != nil {
+		m.selectedItem.child.isSelected = true
+		m.selectedItem.isSelected = false
+		m.selectedItem = m.selectedItem.child
 	}
 }
 
 func (m *Menu) Print(t *terminal.Terminal) int {
 	var (
 		lastRow     int       = t.Height - 1
-		item        *MenuItem = m.FirstItem
+		item        *MenuItem = m.firstItem
 		countOffset int       = 0
 	)
 
@@ -79,22 +79,22 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 	// Находим пункт меню в соответствии с отступом
 	for countOffset < t.OffsetY {
 		countOffset++
-		item = item.Child
+		item = item.child
 	}
 
 	for y := 2; y < lastRow; y++ {
 		t.PrintText(0, y, item.Title, item.UnderlineIfSelected())
-		if item.Child == nil || item.Child == m.FirstItem {
+		if item.child == nil || item.child == m.firstItem {
 			break
 		}
-		item = item.Child
+		item = item.child
 	}
 
 	for y := 2; y < lastRow; y++ {
 		t.PrintText(t.Width/3, y, " ", tcell.StyleDefault.Background(tcell.ColorGrey))
 	}
 
-	spltDesc := strings.Split(m.SelectedItem.Description, "\n")
+	spltDesc := strings.Split(m.selectedItem.Description, "\n")
 	i := 0
 	for y := 2; y < lastRow; y++ {
 		if i >= len(spltDesc) {
@@ -105,23 +105,23 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 	}
 
 	var countNoPrintedRows int
-	for item.Child != m.FirstItem {
+	for item.child != m.firstItem {
 		countNoPrintedRows++
-		item = item.Child
+		item = item.child
 	}
 
 	// Футер - выбранный элемент
 	if t.Footer {
-		t.PrintFooter(fmt.Sprintf("Selected: %s", m.SelectedItem.Title), tcell.StyleDefault)
+		t.PrintFooter(fmt.Sprintf("Selected: %s", m.selectedItem.Title), tcell.StyleDefault)
 	}
 
 	return countNoPrintedRows
 }
 
 func (m *Menu) DoSelected(t *terminal.Terminal) {
-	if m.SelectedItem != nil {
-		if m.SelectedItem.SubMenu != nil {
-			t.GoToNewView(m.SelectedItem.SubMenu)
+	if m.selectedItem != nil {
+		if m.selectedItem.subMenu != nil {
+			t.GoToNewView(m.selectedItem.subMenu)
 		}
 	}
 }
@@ -129,10 +129,10 @@ func (m *Menu) DoSelected(t *terminal.Terminal) {
 type MenuItem struct {
 	Title       string
 	Description string
-	Parent      *MenuItem
-	Child       *MenuItem
-	SubMenu     *Menu
-	IsSelected  bool
+	parent      *MenuItem
+	child       *MenuItem
+	subMenu     *Menu
+	isSelected  bool
 }
 
 func NewMenuItem(title string) *MenuItem {
@@ -142,12 +142,12 @@ func NewMenuItem(title string) *MenuItem {
 }
 
 func (mi *MenuItem) WithSubMenu(menu *Menu) *MenuItem {
-	mi.SubMenu = menu
+	mi.subMenu = menu
 	return mi
 }
 
 func (mi *MenuItem) UnderlineIfSelected() tcell.Style {
-	if mi.IsSelected {
+	if mi.isSelected {
 		return tcell.StyleDefault.Underline(true)
 	}
 	return tcell.StyleDefault.Underline(false)
