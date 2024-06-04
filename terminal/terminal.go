@@ -1,26 +1,22 @@
 package terminal
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
-	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 type Terminal struct {
-	Screen tcell.Screen
-	Width, Height int
-	CursorX, CursorY int
-	OffsetX, OffsetY int
-	logger *slog.Logger
-	Footer bool
-	History *HistoryItem
-	nonVisibleRows int
+	Screen           tcell.Screen
+	Width, Height    int
+	logger           *slog.Logger
+	Footer           bool
+	History          *HistoryItem
+	nonVisibleRows   int
 }
 
-type HistoryItem struct{
+type HistoryItem struct {
 	Prev *HistoryItem
 	Item View
 }
@@ -100,43 +96,32 @@ func (t *Terminal) AddStartView(view View) {
 	t.GoToNewView(view)
 }
 
-func (t *Terminal) FillTerminal() {
-	t.Screen.Clear()
-	defer t.Screen.Show()
+func (t *Terminal) CurrentView() View {
+	return t.History.Item
+}
 
-	lastRow := t.Height - 1
-	if (t.Footer) {
-		lastRow -= 1
-	}
-	for y := 0; y <= lastRow; y++ {
-			t.PrintText(0, y, strconv.Itoa(y+t.OffsetY), tcell.StyleDefault)
-	}
+type MouseEvent struct {
+	x, y int
+}
 
-	if (t.Footer) {
-		t.PrintFooter(fmt.Sprintf("Footer. Terminal size: width - %d, height - %d, offset - %d", t.Width, t.Height, t.OffsetY), tcell.StyleDefault)
-	}
+func (me *MouseEvent) XY() (int, int) {
+	return me.x, me.y
 }
 
 type View interface {
+	KeyUp()
+
+	KeyDown()
+
+	WheelUp(*MouseEvent)
+
+	WheelDown(*MouseEvent)
 
 	// Method to Print your View on terminal layout
 	Print(*Terminal) int
 
-	KeyUp()
-	KeyDown()
-
-	// // Select next element in your View by keyDown
-	// SelectNext()
-
-	// // Select previus element in your View by keyUp
-	// SelectPrev()
-
 	// Action on selected element by keyEnter
 	DoSelected(*Terminal)
-}
-
-func (t *Terminal) CurrentView() View {
-	return t.History.Item
 }
 
 func (t *Terminal) PrintCurrentView() {
@@ -146,14 +131,17 @@ func (t *Terminal) PrintCurrentView() {
 	t.nonVisibleRows = t.CurrentView().Print(t)
 }
 
-func (t *Terminal) PrintText(x,y int, text string, style tcell.Style) {
+func (t *Terminal) PrintText(x, y int, text string, style tcell.Style) {
 	for _, c := range text {
 		t.Screen.SetContent(x, y, c, nil, style)
 		x++
 	}
 }
 
-func (t *Terminal) PrintFooter(footer string, style tcell.Style) {
-	t.PrintText(0, t.Height - 1, footer, style)
+func (t *Terminal) PrintRune(x, y int, ch rune, style tcell.Style) {
+	t.Screen.SetContent(x, y, ch, nil, style)
 }
 
+func (t *Terminal) PrintFooter(footer string, style tcell.Style) {
+	t.PrintText(0, t.Height-1, footer, style)
+}

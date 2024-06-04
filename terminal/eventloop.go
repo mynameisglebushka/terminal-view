@@ -18,10 +18,8 @@ func (t *Terminal) Execute() error {
 					break eventloop
 				}
 			case tcell.KeyUp:
-				// t.SelectPrev()
 				t.KeyUp()
 			case tcell.KeyDown:
-				// t.SelectNext()
 				t.KeyDown()
 			case tcell.KeyEnter:
 				t.DoSelected()
@@ -30,9 +28,9 @@ func (t *Terminal) Execute() error {
 		case *tcell.EventMouse:
 			switch ev.Buttons() {
 			case tcell.WheelDown:
-				t.ScrollDown()
+				t.WheelDown(ev)
 			case tcell.WheelUp:
-				t.ScrollUp()
+				t.WheelUp(ev)
 			}
 		case *tcell.EventError:
 			panic(ev)

@@ -1,35 +1,27 @@
 package terminal
 
-import "errors"
+import (
+	"errors"
 
-func (t *Terminal) ScrollUp() {
-	if t.OffsetY > 0 {
-		t.OffsetY -= 1
-	}
-}
-
-func (t *Terminal) ScrollDown() {
-	if t.nonVisibleRows > 0 {
-		t.OffsetY += 1
-	}
-}
-
-// Action on KeyUp
-// func (t *Terminal) SelectPrev() {
-// 	t.CurrentView().SelectPrev()
-// }
+	"github.com/gdamore/tcell/v2"
+)
 
 func (t *Terminal) KeyUp() {
 	t.CurrentView().KeyUp()
 }
 
-// Action on KeyDown
-// func (t *Terminal) SelectNext() {
-// 	t.CurrentView().SelectNext()
-// }
-
 func (t *Terminal) KeyDown() {
 	t.CurrentView().KeyDown()
+}
+
+func (t *Terminal) WheelUp(ev *tcell.EventMouse) {
+	x, y := ev.Position()
+	t.CurrentView().WheelUp(&MouseEvent{x: x, y: y})
+}
+
+func (t *Terminal) WheelDown(ev *tcell.EventMouse) {
+	x, y := ev.Position()
+	t.CurrentView().WheelDown(&MouseEvent{x: x, y: y})
 }
 
 // Action on KeyEnter

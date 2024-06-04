@@ -2,7 +2,6 @@ package menu
 
 import (
 	"fmt"
-	"strings"
 	"terminal-view/terminal"
 
 	"github.com/gdamore/tcell/v2"
@@ -13,6 +12,9 @@ type Menu struct {
 	firstItem    *MenuItem
 	lastItem     *MenuItem
 	selectedItem *MenuItem
+
+	offsetY        int
+	nonVisibleRows int
 }
 
 func NewMenu(title string) *Menu {
@@ -61,6 +63,19 @@ func (m *Menu) selectChild() {
 	}
 }
 
+func (m *Menu) WheelUp(ev *terminal.MouseEvent) {
+	if m.offsetY > 0 {
+		m.offsetY -= 1
+	}
+
+}
+
+func (m *Menu) WheelDown(ev *terminal.MouseEvent) {
+	if m.nonVisibleRows > 0 {
+		m.offsetY += 1
+	}
+}
+
 func (m *Menu) Print(t *terminal.Terminal) int {
 	var (
 		lastRow     int       = t.Height - 1
@@ -77,11 +92,12 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 
 	// Список элементов 1/3 - Описание выбранного элемента 2/3
 	// Находим пункт меню в соответствии с отступом
-	for countOffset < t.OffsetY {
+	for countOffset < m.offsetY {
 		countOffset++
 		item = item.child
 	}
 
+	// Print menu items
 	for y := 2; y < lastRow; y++ {
 		t.PrintText(0, y, item.Title, item.UnderlineIfSelected())
 		if item.child == nil || item.child == m.firstItem {
@@ -90,18 +106,44 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 		item = item.child
 	}
 
+	var (
+		separatorX = t.Width / 3
+	)
+
+	// Print vertical separator
 	for y := 2; y < lastRow; y++ {
-		t.PrintText(t.Width/3, y, " ", tcell.StyleDefault.Background(tcell.ColorGrey))
+		t.PrintText(separatorX, y, " ", tcell.StyleDefault.Background(tcell.ColorGrey))
 	}
 
-	spltDesc := strings.Split(m.selectedItem.Description, "\n")
-	i := 0
-	for y := 2; y < lastRow; y++ {
-		if i >= len(spltDesc) {
-			break
+	// Print description of selected item
+	// var (
+	// 	spltDesc = strings.Split(m.selectedItem.Description, "\n")
+	// 	i = 0
+	// )
+	// for y := 2; y < lastRow; y++ {
+	// 	if i >= len(spltDesc) {
+	// 		break
+	// 	}
+	// 	t.PrintText(separatorX+2, y, spltDesc[i], tcell.StyleDefault)
+	// 	i++
+	// }
+
+	var (
+		descriptionXStart     = separatorX + 2
+		x                 int = descriptionXStart
+		y                 int
+	)
+	for _, ch := range m.selectedItem.Description {
+		if x >= t.Width {
+			y++
+			x = descriptionXStart
 		}
-		t.PrintText(t.Width/3+2, y, spltDesc[i], tcell.StyleDefault)
-		i++
+		if ch == 10 {
+			y++
+			x = descriptionXStart
+		}
+		t.PrintRune(x, y, ch, tcell.StyleDefault)
+		x++
 	}
 
 	var countNoPrintedRows int
@@ -115,6 +157,7 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 		t.PrintFooter(fmt.Sprintf("Selected: %s", m.selectedItem.Title), tcell.StyleDefault)
 	}
 
+	m.nonVisibleRows = countNoPrintedRows
 	return countNoPrintedRows
 }
 
