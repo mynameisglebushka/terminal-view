@@ -13,7 +13,6 @@ type Terminal struct {
 	logger           *slog.Logger
 	Footer           bool
 	History          *HistoryItem
-	nonVisibleRows   int
 }
 
 type HistoryItem struct {
@@ -118,7 +117,7 @@ type View interface {
 	WheelDown(*MouseEvent)
 
 	// Method to Print your View on terminal layout
-	Print(*Terminal) int
+	Print(*Terminal)
 
 	// Action on selected element by keyEnter
 	DoSelected(*Terminal)
@@ -128,7 +127,7 @@ func (t *Terminal) PrintCurrentView() {
 	t.Screen.Clear()
 	defer t.Screen.Show()
 
-	t.nonVisibleRows = t.CurrentView().Print(t)
+	t.CurrentView().Print(t)
 }
 
 func (t *Terminal) PrintText(x, y int, text string, style tcell.Style) {

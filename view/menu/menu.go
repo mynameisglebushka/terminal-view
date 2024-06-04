@@ -76,7 +76,7 @@ func (m *Menu) WheelDown(ev *terminal.MouseEvent) {
 	}
 }
 
-func (m *Menu) Print(t *terminal.Terminal) int {
+func (m *Menu) Print(t *terminal.Terminal) {
 	var (
 		lastRow     int       = t.Height - 1
 		item        *MenuItem = m.firstItem
@@ -116,18 +116,6 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 	}
 
 	// Print description of selected item
-	// var (
-	// 	spltDesc = strings.Split(m.selectedItem.Description, "\n")
-	// 	i = 0
-	// )
-	// for y := 2; y < lastRow; y++ {
-	// 	if i >= len(spltDesc) {
-	// 		break
-	// 	}
-	// 	t.PrintText(separatorX+2, y, spltDesc[i], tcell.StyleDefault)
-	// 	i++
-	// }
-
 	var (
 		descriptionXStart     = separatorX + 2
 		x                 int = descriptionXStart
@@ -158,7 +146,6 @@ func (m *Menu) Print(t *terminal.Terminal) int {
 	}
 
 	m.nonVisibleRows = countNoPrintedRows
-	return countNoPrintedRows
 }
 
 func (m *Menu) DoSelected(t *terminal.Terminal) {
