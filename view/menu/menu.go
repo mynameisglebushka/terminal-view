@@ -15,6 +15,8 @@ type Menu struct {
 
 	offsetY        int
 	nonVisibleRows int
+
+	height, weight int
 }
 
 func NewMenu(title string) *Menu {
@@ -37,6 +39,11 @@ func (m *Menu) AddItem(item *MenuItem) *Menu {
 		m.firstItem.isSelected = true
 	}
 	return m
+}
+
+func (m *Menu) Resize(x,y int) {
+	m.height = y
+	m.weight = x
 }
 
 func (m *Menu) KeyUp() {
@@ -70,7 +77,20 @@ func (m *Menu) WheelUp(ev *terminal.MouseEvent) {
 
 }
 
+func (m *Menu) WheelUp1(ev *tcell.EventMouse) {
+	if m.offsetY > 0 {
+		m.offsetY -= 1
+	}
+
+}
+
 func (m *Menu) WheelDown(ev *terminal.MouseEvent) {
+	if m.nonVisibleRows > 0 {
+		m.offsetY += 1
+	}
+}
+
+func (m *Menu) WheelDown1(ev *tcell.EventMouse) {
 	if m.nonVisibleRows > 0 {
 		m.offsetY += 1
 	}
