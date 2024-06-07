@@ -4,3 +4,9 @@ Simple TUI library:
 
 . Based on tcell
 . Structed maybe like cobra
+
+== Info
+
+. Handling Events
+.. After handle No Quit / NoError Event Terminal Print CurrentView on layout
+.. Terminal provides access to the history of the Views

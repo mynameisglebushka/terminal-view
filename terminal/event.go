@@ -86,3 +86,19 @@ func NewNextViewEvent(view View) *NextViewEvent {
 func (e *NextViewEvent) When() time.Time {
 	return e.when
 }
+
+type FocusEvent struct {
+	when    time.Time
+	inFocus bool
+}
+
+func NewFocusEvent(ok bool) *FocusEvent {
+	return &FocusEvent{
+		when:    time.Now(),
+		inFocus: ok,
+	}
+}
+
+func (e *FocusEvent) When() time.Time {
+	return e.when
+}

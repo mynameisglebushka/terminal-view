@@ -3,16 +3,18 @@ package terminal
 import (
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 type Terminal struct {
-	Screen           tcell.Screen
-	Width, Height    int
-	logger           *slog.Logger
-	Footer           bool
-	History          *HistoryItem
+	Screen        tcell.Screen
+	startupTime   time.Time
+	Focused bool
+	Width, Height int
+	logger        *slog.Logger
+	History       *HistoryItem
 }
 
 type HistoryItem struct {
@@ -28,12 +30,6 @@ func WithLogger(log *slog.Logger) TerminalFunc {
 	}
 }
 
-func WithFooter() TerminalFunc {
-	return func(t *Terminal) {
-		t.Footer = true
-	}
-}
-
 func defaultTerminal() *Terminal {
 	return &Terminal{
 		logger: slog.New(
@@ -43,6 +39,7 @@ func defaultTerminal() *Terminal {
 				},
 			),
 		),
+		startupTime: time.Now(),
 	}
 }
 
@@ -92,7 +89,7 @@ func (t *Terminal) Resize() {
 }
 
 func (t *Terminal) AddStartView(view View) {
-	t.GoToNewView(view)
+	t.GoToNextView(view)
 }
 
 func (t *Terminal) CurrentView() View {
@@ -108,19 +105,10 @@ func (me *MouseEvent) XY() (int, int) {
 }
 
 type View interface {
-	KeyUp()
-
-	KeyDown()
-
-	WheelUp(*MouseEvent)
-
-	WheelDown(*MouseEvent)
+	HandleEvent(tcell.Event) Event
 
 	// Method to Print your View on terminal layout
 	Print(*Terminal)
-
-	// Action on selected element by keyEnter
-	DoSelected(*Terminal)
 }
 
 func (t *Terminal) PrintCurrentView() {

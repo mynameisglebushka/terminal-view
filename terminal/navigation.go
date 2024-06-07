@@ -2,40 +2,13 @@ package terminal
 
 import (
 	"errors"
-
-	"github.com/gdamore/tcell/v2"
 )
-
-func (t *Terminal) KeyUp() {
-	t.CurrentView().KeyUp()
-}
-
-func (t *Terminal) KeyDown() {
-	t.CurrentView().KeyDown()
-}
-
-func (t *Terminal) WheelUp(ev *tcell.EventMouse) {
-	x, y := ev.Position()
-	t.CurrentView().WheelUp(&MouseEvent{x: x, y: y})
-}
-
-func (t *Terminal) WheelDown(ev *tcell.EventMouse) {
-	x, y := ev.Position()
-	t.CurrentView().WheelDown(&MouseEvent{x: x, y: y})
-}
-
-// Action on KeyEnter
-func (t *Terminal) DoSelected() {
-	t.CurrentView().DoSelected(t)
-}
 
 var (
 	ErrBrokenHistory = errors.New("no view history")
 	ErrLastItem      = errors.New("it's a last item in history")
 )
 
-// Action on KeyESC
-//
 // If CurrentView it is a last View in History return ErrLastItem
 func (t *Terminal) GoToPrevView() error {
 	if t.History == nil {
@@ -51,7 +24,7 @@ func (t *Terminal) GoToPrevView() error {
 
 }
 
-func (t *Terminal) GoToNewView(view View) {
+func (t *Terminal) GoToNextView(view View) {
 	item := createHistoryItem(view)
 
 	if t.History == nil {

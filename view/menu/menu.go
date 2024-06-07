@@ -3,6 +3,7 @@ package menu
 import (
 	"fmt"
 	"terminal-view/terminal"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -17,6 +18,8 @@ type Menu struct {
 	nonVisibleRows int
 
 	height, weight int
+
+	Focus bool
 }
 
 func NewMenu(title string) *Menu {
@@ -41,7 +44,7 @@ func (m *Menu) AddItem(item *MenuItem) *Menu {
 	return m
 }
 
-func (m *Menu) Resize(x,y int) {
+func (m *Menu) Resize(x, y int) {
 	m.height = y
 	m.weight = x
 }
@@ -103,9 +106,7 @@ func (m *Menu) Print(t *terminal.Terminal) {
 		countOffset int       = 0
 	)
 
-	if t.Footer {
-		lastRow -= 1
-	}
+	lastRow -= 1
 
 	// Куда ведет клавиша ESC
 	t.PrintText(0, 0, fmt.Sprintf("Меню: %s. Для выхода нажмите ESC", m.Title), tcell.StyleDefault)
@@ -161,19 +162,18 @@ func (m *Menu) Print(t *terminal.Terminal) {
 	}
 
 	// Футер - выбранный элемент
-	if t.Footer {
-		t.PrintFooter(fmt.Sprintf("Selected: %s", m.selectedItem.Title), tcell.StyleDefault)
-	}
+	t.PrintFooter(fmt.Sprintf("Selected: %s, time: %s, focus: %v", m.selectedItem.Title, time.Now().String(), t.Focused), tcell.StyleDefault)
 
 	m.nonVisibleRows = countNoPrintedRows
 }
 
-func (m *Menu) DoSelected(t *terminal.Terminal) {
+func (m *Menu) DoSelected() terminal.View {
 	if m.selectedItem != nil {
 		if m.selectedItem.subMenu != nil {
-			t.GoToNewView(m.selectedItem.subMenu)
+			return m.selectedItem.subMenu
 		}
 	}
+	return nil
 }
 
 type MenuItem struct {

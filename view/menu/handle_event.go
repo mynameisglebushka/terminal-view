@@ -9,6 +9,8 @@ import (
 func (m *Menu) HandleEvent(ev tcell.Event) terminal.Event {
 
 	switch ev := ev.(type) {
+	case *tcell.EventFocus:
+		return terminal.NewFocusEvent(ev.Focused)
 	case *tcell.EventResize:
 		m.Resize(ev.Size())
 		return terminal.NewResizeEvent(ev.Size())
@@ -23,7 +25,8 @@ func (m *Menu) HandleEvent(ev tcell.Event) terminal.Event {
 		case tcell.KeyDown:
 			m.KeyDown()
 		case tcell.KeyEnter:
-			return terminal.NewNextViewEvent(nil)
+			nextView := m.DoSelected()
+			return terminal.NewNextViewEvent(nextView)
 		}
 	case *tcell.EventMouse:
 		switch ev.Buttons() {

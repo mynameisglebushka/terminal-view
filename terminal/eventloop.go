@@ -1,42 +1,33 @@
 package terminal
 
-import "github.com/gdamore/tcell/v2"
+import "time"
 
 func (t *Terminal) Execute() error {
-	eventloop:
-	for {
-		ev := t.Screen.PollEvent()
-		switch ev := ev.(type) {
-		case *tcell.EventResize:
-			t.Resize()
-		case *tcell.EventKey:
-			switch ev.Key() {
-			case tcell.KeyCtrlC:
-				break eventloop
-			case tcell.KeyESC:
-				if t.GoToPrevView() != nil {
-					break eventloop
-				}
-			case tcell.KeyUp:
-				t.KeyUp()
-			case tcell.KeyDown:
-				t.KeyDown()
-			case tcell.KeyEnter:
-				t.DoSelected()
 
+eventloop:
+	for {
+		event := t.CurrentView().HandleEvent(t.Screen.PollEvent())
+		switch ev := event.(type) {
+		case *ResizeEvent:
+			t.Resize()
+		case *NextViewEvent:
+			if ev.view != nil {
+				t.GoToNextView(ev.view)
 			}
-		case *tcell.EventMouse:
-			switch ev.Buttons() {
-			case tcell.WheelDown:
-				t.WheelDown(ev)
-			case tcell.WheelUp:
-				t.WheelUp(ev)
+		case *HistoryBackEvent:
+			if t.GoToPrevView() != nil {
+				break eventloop
 			}
-		case *tcell.EventError:
+		case *FocusEvent:
+			t.Focused = ev.inFocus
+		case *QuitEvent:
+			break eventloop
+		case *ErrorEvent:
 			panic(ev)
 		}
 
 		t.PrintCurrentView()
 	}
+	t.logger.Info("terminal session over", "time", time.Since(t.startupTime))
 	return nil
 }
